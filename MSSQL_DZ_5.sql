@@ -1,12 +1,14 @@
 --Создаём базу
 CREATE DATABASE CDShop;
 
+USE CDShop;
+
 --Создаём таблицу продавцов
 CREATE TABLE Sellers
 	(id int identity(1,1) not null
-		CONSTRAINTS PK_Sellers primary key id,
+		Constraint PK_Sellers primary key(id),
 	name varchar(255) not null
-		CONSTRAINTS UniSellers UNIQUE(name));
+		Constraint UniSellers UNIQUE(name));
 
 --Заполняем
 INSERT Sellers(name)
@@ -16,9 +18,9 @@ INSERT Sellers(name)
 --Создаём таблицу Format
 CREATE TABLE Format
 	(id int identity(1,1) not null
-		CONSTRAINTS PK_Format primary key(id),
+		Constraint PK_Format primary key(id),
 	name varchar(25) not null
-		CONSTRAINTS UniFormat UNIQUE(name));
+		Constraint UniFormat UNIQUE(name));
 
 --Наполняем таблицу Format
 INSERT Format(name)
@@ -27,10 +29,10 @@ INSERT Format(name)
 --Создаём таблицу Bands
 CREATE TABLE Bands
 	(id int identity(1,1) not null
-		CONSTRAINTS PK_Bands primary key(id),
+		Constraint PK_Bands primary key(id),
 	name nvarchar(50) not null
-		CONSTRAINTS UniBand UNIQUE(name),
-	year data);
+		Constraint UniBand UNIQUE(name),
+	year date);
 
 --Заполняем таблицу Bands
 INSERT Bands(name, year)
@@ -44,14 +46,14 @@ INSERT Bands(name, year)
 --Создаём таблицу CD
 CREATE TABLE CD
 	(id int identity(1,1) not null
-		CONSTRAINTS PK_CD primary key(id),
+		Constraint PK_CD primary key(id),
 	name nvarchar(255) not null,
 	CD_Date date not null,
 	id_band int not null
-		CONSTRAINTS FK_Band foreign key(id_band)
+		Constraint FK_Band foreign key(id_band)
 			references Bands(id),
 	id_format int not null
-		CONSTRAINTS FK_Format foreign key(id_format)
+		Constraint FK_Format foreign key(id_format)
 			references Format(id));
 
 --Заполняем таблицу CD
@@ -69,12 +71,12 @@ INSERT CD
 --Создаём таблицу продаж
 CREATE TABLE Selling
 	(id int identity(1,1) not null
-		CONSTRAINTS PK_Selling primary key Selling(id),
+		Constraint PK_Selling primary key(id),
 	id_seller int not null
-		CONSTRAINTS FK_Sellers foreign key(id_seller)
+		Constraint FK_Sellers foreign key(id_seller)
 			references Sellers(id),
 	id_cd int not null
-		CONSTRAINTS FK_CD foreign key(id_cd)
+		Constraint FK_CD foreign key(id_cd)
 			references CD(id));
 
 --Заполняем таблицу Selling
@@ -86,9 +88,9 @@ INSERT Selling
 		(1,5),
 		(2,6),
 		(2,1),
-		(2,8),
-		(1,9),
-		(2,10);
+		(2,7),
+		(1,8),
+		(2,9);
 
 --Показать всю информацию о продажах
 CREATE VIEW Selling_View
@@ -97,23 +99,23 @@ SELECT CD.name AS 'CD',
 	CD_Date AS 'CD date',
 	Bands.name AS 'Band',
 	Format.name AS 'Format',
-	Seller.name AS 'Seller'
-FROM (((Selling LEFT CD ON Selling.id_cd=CD.id)
-	LEFT Sellers ON Selling.id_seller=Sellers.id)
-	LEFT Format ON CD.id_format = Format.id)
-	LEFT Bands ON CD.id_band = Bands.id;
+	Sellers.name AS 'Seller'
+FROM (((Selling LEFT JOIN CD ON Selling.id_cd=CD.id)
+	LEFT JOIN Sellers ON Selling.id_seller=Sellers.id)
+	LEFT JOIN Format ON CD.id_format = Format.id)
+	LEFT JOIN Bands ON CD.id_band = Bands.id;
 
 --Показать кол-во проданных дисков по каждой из групп
 SELECT Bands.name AS 'Band',
 	COUNT(Selling.id_cd)
-FROM (Selling LEFT CD ON Selling.id_cd=CD.id)
-	LEFT Bands ON CD.id_band = Bands.id
+FROM (Selling LEFT JOIN CD ON Selling.id_cd=CD.id)
+	LEFT JOIN Bands ON CD.id_band = Bands.id
 GROUP BY Bands.name;
 
 --Показать самую популярную группу
 SELECT TOP(1) Bands.name AS 'Most popular Band'
-FROM (Selling LEFT CD ON Selling.id_cd=CD.id)
-	LEFT Bands ON CD.id_band = Bands.id
+FROM (Selling LEFT JOIN CD ON Selling.id_cd=CD.id)
+	LEFT JOIN Bands ON CD.id_band = Bands.id
 GROUP BY Bands.name
 ORDER BY COUNT(id_cd) DESC;
 
@@ -134,7 +136,7 @@ WHERE id IN
 		FROM Themes
 		WHERE name LIKE 'Программирование')
 	GROUP BY idPress
-	ORDER BY COUNT(id) DESC);
+	ORDER BY COUNT(N) DESC);
 
 --Показать тематику,
 --по которой издано наименьшее кол-во страниц
@@ -170,7 +172,7 @@ SELECT FirstName+' '+LastName AS 'Most popular Author'
 FROM Authors
 WHERE id IN
 	(SELECT TOP(1) id_Author
-	FROM S_Cards LEFT Books ON S_Cards.id_Book=Books.id
+	FROM S_Cards LEFT JOIN Books ON S_Cards.id_Book=Books.id
 	GROUP BY id_Author, Books.id
 	ORDER BY COUNT(S_Cards.id) DESC);
 
@@ -180,7 +182,7 @@ SELECT Name AS 'Departmebt'
 FROM Departments
 WHERE id IN
 	(SELECT TOP(1) id_Dep
-	FROM T_Cards LEFT Teachers ON T_Cards.id_Teacher=Teachers.id
+	FROM T_Cards LEFT JOIN Teachers ON T_Cards.id_Teacher=Teachers.id
 	GROUP BY id_Dep
 	ORDER BY COUNT(T_Cards.id) DESC);
 
@@ -189,6 +191,6 @@ SELECT Name AS 'Themes are the most semilater in teachers'
 FROM Themes
 WHERE id IN
 	(SELECT TOP(1) id_Themes
-	FROM T_Cards LEFT Books ON T_Cards.id_Book=Books.id
+	FROM T_Cards LEFT JOIN Books ON T_Cards.id_Book=Books.id
 	GROUP BY id_Themes
 	ORDER BY COUNT(T_Cards.id) DESC);
