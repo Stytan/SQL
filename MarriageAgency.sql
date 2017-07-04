@@ -1,7 +1,11 @@
 --Создаём базу
 CREATE DATABASE MarriageAgency;
 
+GO
+
 USE MarriageAgency;
+
+GO
 
 --Создаём таблицу стран
 CREATE TABLE Countries
@@ -9,6 +13,8 @@ CREATE TABLE Countries
 		Constraint PK_Countries primary key(id),
 	name varchar(80) not null
 		Constraint UniCountries UNIQUE(name));
+
+GO
 
 --Создаём таблицу городов
 CREATE TABLE Cities
@@ -19,6 +25,7 @@ CREATE TABLE Cities
 	idCountry int not null
 		Constraint FK_Counties foreign key(idCountry)
 			references Countries(id));		
+GO
 
 --Создаём таблицу цветов кожи
 CREATE TABLE SkinColors
@@ -26,6 +33,7 @@ CREATE TABLE SkinColors
 		Constraint PK_SkinColors primary key(id),
 	name varchar(80) not null
 		Constraint UniSkinColors UNIQUE(name));
+GO
 
 --Создаём таблицу цветов волос
 CREATE TABLE HairColors
@@ -33,6 +41,7 @@ CREATE TABLE HairColors
 		Constraint PK_HairColors primary key(id),
 	name varchar(80) not null
 		Constraint UniHairColors UNIQUE(name));
+GO
 
 --Создаём таблицу профессий
 CREATE TABLE Professions
@@ -40,6 +49,7 @@ CREATE TABLE Professions
 		Constraint PK_Professions primary key(id),
 	name varchar(255) not null
 		Constraint UniProfessions UNIQUE(name));
+GO
 
 --Создаём таблицу хобби
 CREATE TABLE Hobbies
@@ -47,13 +57,14 @@ CREATE TABLE Hobbies
 		Constraint PK_Hobbies primary key(id),
 	name varchar(255) not null
 		Constraint UniHobbies UNIQUE(name));
+GO
 
 --Создаём таблицу требований
 CREATE TABLE Requirements
 	(id int identity(1,1) not null
 		Constraint PK_Requirements primary key(id),
 	age int,
-	male boolean not null,
+	male bit not null,
 	salary int,
 	height int,
 	weight int,
@@ -72,6 +83,7 @@ CREATE TABLE Requirements
 	idHobby int
 		Constraint FK_ReqHobby foreign key(idHobby)
 			references Hobbies(id));
+GO
 
 --Создаём таблицу партнеров/соискателей
 CREATE TABLE Partners
@@ -79,7 +91,7 @@ CREATE TABLE Partners
 		Constraint PK_Partners primary key(id),
 	name varchar(80) not null,
 	age int,
-	male boolean not null,
+	male bit not null,
 	salary int,
 	height int,
 	weight int,
@@ -105,6 +117,7 @@ CREATE TABLE Partners
 		Constraint FK_Partner foreign key(idPartner)
 			references Partners(id),
 	photo varchar(255));
+GO
 
 --Создаём триггер который после добавления соискателя
 --со ссылкой на партнера проставляет партнёру
@@ -132,6 +145,7 @@ BEGIN
 			WHERE id = @idPartner;
 	END
 END;
+GO
 
 --Создаём триггер который после обновления соискателя
 --со ссылкой на партнера проставляет партнёру
@@ -172,14 +186,14 @@ BEGIN
 		END
 	END
 END;
+GO
 
 --Функция возвращает id страны по названию
-CREATE FUNCTION getIdCountry
-(@country varchar(80))
-RETURNS int
+CREATE PROCEDURE getIdCountry
+@country varchar(80),
+@idCountry int OUTPUT
 AS
 BEGIN
-	DECLARE @idCountry int;
 	--Если страна заполнена
 	IF(@country IS NOT NULL)
 	BEGIN
@@ -196,22 +210,23 @@ BEGIN
 			WHERE name = @country;
 		END
 	END
-	RETURN(@idCountry);
+	RETURN;
 END
+GO
 
 --Функция возвращает id города по названию
-CREATE FUNCTION getIdCity
-(@city varchar(50), @country varchar(80))
-RETURNS int
+CREATE PROCEDURE getIdCity
+@city varchar(50),
+@country varchar(80),
+@idCity int OUTPUT
 AS
 BEGIN
-	DECLARE @idCity int;
 	--Если город заполнен
 	IF(@city IS NOT NULL)
 	BEGIN
 		DECLARE @idCountry int;
 		--Если страна заполнена
-		SELECT @idCountry = getIdCountry(@country);
+		EXECUTE getIdCountry @country, @idCountry OUTPUT;
 		SELECT @idCity = id
 		FROM Cities
 		WHERE name = @city AND idCountry = @idCountry;
@@ -225,16 +240,16 @@ BEGIN
 			WHERE name = @city AND idCountry = @idCountry;
 		END
 	END
-	RETURN(@idCity);
+	RETURN;
 END;
+GO
 
 --Функция возвращает id цвета кожи
-CREATE FUNCTION getIdSkinColor
-(@skinColor varchar(80))
-RETURNS int
+CREATE PROCEDURE getIdSkinColor
+@skinColor varchar(80),
+@idSkinColor int OUTPUT
 AS
 BEGIN
-	DECLARE @idSkinColor int;
 	IF(@skinColor IS NOT NULL)
 	BEGIN
 		SELECT @idSkinColor = id
@@ -249,16 +264,16 @@ BEGIN
 			WHERE name = @skinColor;
 		END
 	END
-	RETURN(@idSkinColor);
+	RETURN;
 END
+GO
 
 --Функция возвращает id цвета волос
-CREATE FUNCTION getIdHairColor
-(@hairColor varchar(80))
-RETURNS int
+CREATE PROCEDURE getIdHairColor
+@hairColor varchar(80),
+@idHairColor int OUTPUT
 AS
 BEGIN
-	DECLARE @idHairColor int;
 	IF(@hairColor IS NOT NULL)
 	BEGIN
 		SELECT @idHairColor = id
@@ -273,16 +288,16 @@ BEGIN
 			WHERE name = @hairColor;
 		END
 	END
-	RETURN(@idHairColor);
+	RETURN;
 END
+GO
 
 --Функция возвращает id профессии
-CREATE FUNCTION getIdProfession
-(@profession varchar(255))
-RETURNS int
+CREATE PROCEDURE getIdProfession
+@profession varchar(255),
+@idProfession int OUTPUT
 AS
 BEGIN
-	DECLARE @idProfession int;
 	IF(@profession IS NOT NULL)
 	BEGIN
 		SELECT @idProfession = id
@@ -297,16 +312,16 @@ BEGIN
 			WHERE name = @profession;
 		END
 	END
-	RETURN(@idProfession);
+	RETURN;
 END
+GO
 
 --Функция возвращает id хобби
-CREATE FUNCTION getIdHobby
-(@hobby varchar(255))
-RETURNS int
+CREATE PROCEDURE getIdHobby
+@hobby varchar(255),
+@idHobby int OUTPUT
 AS
 BEGIN
-	DECLARE @idHobby int;
 	IF(@hobby IS NOT NULL)
 	BEGIN
 		SELECT @idHobby = id
@@ -321,16 +336,16 @@ BEGIN
 			WHERE name = @hobby;
 		END
 	END
-	RETURN(@idHobby);
+	RETURN;
 END
+GO
 
---Функция возвращает id партнера
-CREATE FUNCTION getIdPartner
-(@partner varchar(80))
-RETURNS int
+--Процедура возвращает id партнера
+CREATE PROCEDURE getIdPartner
+@partner varchar(80),
+@idPartner int OUTPUT
 AS
 BEGIN
-	DECLARE @idPartner int;
 	IF(@partner IS NOT NULL)
 	BEGIN
 		SELECT @idPartner = COUNT(id)
@@ -344,18 +359,19 @@ BEGIN
 		END
 		ELSE
 		BEGIN
-			PRINT("ERROR: Found more than one partner with that name. Partner set to NULL.";
+			PRINT('ERROR: Found more than one partner with that name. Partner set to NULL.');
 			SET @idPartner = NULL;
 		END
 	END
-	RETURN(@idPartner);
+	RETURN;
 END
+GO
 
 --Процедура вставки нового соискателя без требований
 CREATE PROCEDURE addPartner
 @name varchar(80),
 @age int,
-@male boolean,
+@male bit,
 @salary int,
 @height int,
 @weight int,
@@ -375,23 +391,24 @@ BEGIN
 	DECLARE @idProfession int;
 	DECLARE @idHobby int;
 	DECLARE @idPartner int;
-	SELECT @idCity = getIdCity(@city,@country);
-	SELECT @idSkinColor = getIdSkinColor(@skinColor);
-	SELECT @idHairColor = getIdHairColor(@hairColor);
-	SELECT @idProfession = getIdProfession(@profession);
-	SELECT @idHobby = getIdHobby(@hobby);
-	SELECT @idPartner = getIdPartner(@partner);
+	EXECUTE getIdCity @city, @country, @idCity OUTPUT;
+	EXECUTE getIdSkinColor @skinColor, @idSkinColor OUTPUT;
+	EXECUTE getIdHairColor @hairColor, @idHairColor OUTPUT;
+	EXECUTE getIdProfession @profession, @idProfession OUTPUT;
+	EXECUTE getIdHobby @hobby, @idHobby OUTPUT;
+	EXECUTE getIdPartner @partner, @idPartner OUTPUT;
 	INSERT INTO Partners
 	VALUES(@name,@age,@male,@salary,@height,@weight,NULL,
 		@idCity,@idSkinColor,@idHairColor,@idProfession,
 		@idHobby,@idPartner,@photo);
 END
+GO
 
 --Процедура вставки требований соискателя
 CREATE PROCEDURE addRequirement
 @name varchar(80),
 @age int,
-@male boolean,
+@male bit,
 @salary int,
 @height int,
 @weight int,
@@ -399,11 +416,12 @@ CREATE PROCEDURE addRequirement
 @skinColor varchar(80),
 @hairColor varchar(80),
 @profession varchar(255),
-@hobby varchar(255)
+@hobby varchar(255),
+@idRequirement int  OUTPUT
 AS
 BEGIN
 	DECLARE @idPartner int;
-	SELECT @idPartner = getIdPartner(@name);
+	EXECUTE getIdPartner @name, @idPartner OUTPUT;
 	IF(@idPartner IS NOT NULL)
 	BEGIN
 		DECLARE @idCountry int;
@@ -411,27 +429,25 @@ BEGIN
 		DECLARE @idHairColor int;
 		DECLARE @idProfession int;
 		DECLARE @idHobby int;	
-		SELECT @idCountry = getIdCountry(@country);
-		SELECT @idSkinColor = getIdSkinColor(@skinColor);
-		SELECT @idHairColor = getIdHairColor(@hairColor);
-		SELECT @idProfession = getIdProfession(@profession);
-		SELECT @idHobby = getIdHobby(@hobby);
+		EXECUTE getIdCountry @country, @idCountry OUTPUT;
+		EXECUTE getIdSkinColor @skinColor, @idSkinColor OUTPUT;
+		EXECUTE getIdHairColor @hairColor, @idHairColor OUTPUT;
+		EXECUTE getIdProfession @profession, @idProfession OUTPUT;
+		EXECUTE getIdHobby @hobby, @idHobby OUTPUT;
 		INSERT INTO Requirements
-		VALUES(@age,@male,@salary,@height,@weight,@idCountry,
-			@idSkinColor,@idHairColor,@idProfession,
-			@idHobby);
-		DECLARE @idRequirement int;
+		VALUES(@age, @male, @salary, @height, @weight, @idCountry,
+			@idSkinColor, @idHairColor, @idProfession, @idHobby);
 		SELECT @idRequirement = id
 		FROM Requirements
-		WHERE age=@age AND male = @male AND salary = @salary
+		WHERE age = @age AND male = @male AND salary = @salary
 			AND height = @height AND weight = @weight
 			AND idCountry = @idCountry AND idSkinColor = @idSkinColor
 			AND idHairColor = @idHairColor AND idProfession = @idProfession
 			AND idHobby = @idHobby;
 	END
+	RETURN;
 END
-
-
+GO
 
 EXECUTE addPartner 'Василий Иванович Аношкин', 42, TRUE, 500, 180, 85,
 	'Киев', 'Украина', 'светлый', 'чёрный', 'водитель автотранспортных средств',
@@ -476,4 +492,4 @@ EXECUTE addPartner 'Раиса Ивановна Светличная', 52, FALSE
 EXECUTE addPartner 'Джори Випаски', 38, TRUE, 2500, 173, 78,
 	'Париж', 'Франция', 'черный', 'черный', 'монтажник',
 	'рыбалка', NULL, 'e:\photos\VipaskiD.jpg';
-	
+
